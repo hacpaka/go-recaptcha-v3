@@ -1,11 +1,9 @@
-// This package verifies reCaptcha v3 (http://www.google.com/recaptcha) responses
-package recaptcha
+package main
 
 import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -30,14 +28,13 @@ type Recaptcha struct {
 	PrivateKey string
 }
 
-func (r *Recaptcha) requestVerify(remoteAddr net.IP, captchaResponse string) (recaptchaResponse, error) {
+func (r *Recaptcha) requestVerify(captchaResponse string) (recaptchaResponse, error) {
 	// fire off request with a timeout of 10 seconds
 	httpClient := http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.PostForm(
 		recaptchaServer,
 		url.Values{
 			"secret":   {r.PrivateKey},
-			"remoteip": {remoteAddr.String()},
 			"response": {captchaResponse},
 		},
 	)
@@ -67,9 +64,9 @@ func (r *Recaptcha) requestVerify(remoteAddr net.IP, captchaResponse string) (re
 	return response, nil
 }
 
-// Check : check user IP, captcha subject (= page) and captcha response but return treshold
-func (r *Recaptcha) Check(remoteip net.IP, action string, response string) (success bool, score float32, err error) {
-	resp, err := r.requestVerify(remoteip, response)
+// Check : captcha subject (= page) and captcha response but return treshold
+func (r *Recaptcha) Check(action string, response string) (success bool, score float32, err error) {
+	resp, err := r.requestVerify(response)
 	// fetch/parsing failed
 	if err != nil {
 		return false, 0, err
@@ -90,8 +87,8 @@ func (r *Recaptcha) Check(remoteip net.IP, action string, response string) (succ
 }
 
 // Verify : check user IP, captcha subject (= page) and captcha response
-func (r *Recaptcha) Verify(remoteip net.IP, action string, response string, minScore float32) (success bool, err error) {
-	success, score, err := r.Check(remoteip, action, response)
+func (r *Recaptcha) Verify(action string, response string, minScore float32) (success bool, err error) {
+	success, score, err := r.Check(action, response)
 
 	// return false if response failed
 	if !success || err != nil {
