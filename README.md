@@ -1,4 +1,4 @@
-sgo-recaptcha-v3
+go-recaptcha-v3
 ============
 
 About
