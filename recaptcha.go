@@ -11,90 +11,67 @@ import (
 )
 
 type recaptchaResponse struct {
-	Success     bool      `json:"success"`
-	Score       float32   `json:"score"`
-	Action      string    `json:"action"`
-	ChallengeTS time.Time `json:"challenge_ts"`
-	Hostname    string    `json:"hostname"`
-	ErrorCodes  []string  `json:"error-codes"`
+	Success    bool      `json:"success"`
+	Score      float32   `json:"score"`
+	Action     string    `json:"action"`
+	Challenge  time.Time `json:"challenge_ts"`
+	Hostname   string    `json:"hostname"`
+	ErrorCodes []string  `json:"error-codes"`
 }
 
 const (
 	requestTimeout  = time.Second * 10
 	recaptchaServer = "https://www.google.com/recaptcha/api/siteverify"
+	responseKey = "g-recaptcha-response"
 )
 
 type Recaptcha struct {
 	PrivateKey string
 }
 
-func (r *Recaptcha) requestVerify(captchaResponse string) (recaptchaResponse, error) {
-	// fire off request with a timeout of 10 seconds
-	httpClient := http.Client{Timeout: requestTimeout}
+func (r *Recaptcha) Verify(token string, action string, score float32) (bool, error) {
+	if score < 0 || score > 1 {
+		return false, errors.New("score must be a number between 0.0 and 1.0")
+	}
+
+	httpClient := http.Client{
+		Timeout: requestTimeout,
+	}
+
 	resp, err := httpClient.PostForm(
 		recaptchaServer,
+
 		url.Values{
-			"secret":   {r.PrivateKey},
-			"response": {captchaResponse},
+			"secret": {r.PrivateKey},
+			"response": {token},
 		},
 	)
 
-	// request failed
-	if err != nil {
-		return recaptchaResponse{Success: false}, err
-	}
-
-	// close response when function exits
 	defer resp.Body.Close()
-
-	// read response body
-	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return recaptchaResponse{Success: false}, err
-	}
-
-	// parse json to our response object
-	var response recaptchaResponse
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		return recaptchaResponse{Success: false}, err
-	}
-
-	// return our object response
-	return response, nil
-}
-
-// Check : captcha subject (= page) and captcha response but return treshold
-func (r *Recaptcha) Check(action string, response string) (success bool, score float32, err error) {
-	resp, err := r.requestVerify(response)
-	// fetch/parsing failed
-	if err != nil {
-		return false, 0, err
-	}
-
-	// captcha subject did not match
-	if strings.ToLower(resp.Action) != strings.ToLower(action) {
-		return false, 0, errors.New("recaptcha actions do not match")
-	}
-
-	// recaptcha token was not valid
-	if !resp.Success {
-		return false, 0, nil
-	}
-
-	// user treshold was not enough
-	return true, resp.Score, nil
-}
-
-// Verify : check user IP, captcha subject (= page) and captcha response
-func (r *Recaptcha) Verify(action string, response string, minScore float32) (success bool, err error) {
-	success, score, err := r.Check(action, response)
-
-	// return false if response failed
-	if !success || err != nil {
 		return false, err
 	}
 
-	// user score was not enough
-	return score >= minScore, nil
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return false, err
+	}
+
+	var captcha recaptchaResponse
+	err = json.Unmarshal(body, &captcha)
+	if err != nil {
+		return false, err
+	}
+
+	if strings.ToLower(captcha.Action) != strings.ToLower(action) {
+		return false, errors.New("reCAPTCHA actions do not match")
+	}
+
+	if captcha.Score < score {
+		return false, nil
+	}
+
+	return captcha.Success, nil
 }
+
+
