@@ -22,7 +22,6 @@ type recaptchaResponse struct {
 const (
 	requestTimeout  = time.Second * 10
 	recaptchaServer = "https://www.google.com/recaptcha/api/siteverify"
-	responseKey = "g-recaptcha-response"
 )
 
 type Recaptcha struct {
