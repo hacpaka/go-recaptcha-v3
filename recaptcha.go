@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type recaptchaResponse struct {
+type response struct {
 	Success    bool      `json:"success"`
 	Score      float32   `json:"score"`
 	Action     string    `json:"action"`
@@ -56,7 +56,7 @@ func (r *Recaptcha) Verify(token string, action string, score float32) (bool, er
 		return false, err
 	}
 
-	var captcha recaptchaResponse
+	var captcha response
 	err = json.Unmarshal(body, &captcha)
 	if err != nil {
 		return false, err
