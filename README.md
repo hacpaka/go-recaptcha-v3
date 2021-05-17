@@ -4,7 +4,7 @@ go-recaptcha-v3
 About
 -----
 
-This package is designed to handle [GOOGLE reCAPTCHA v3](https://developers.google.com/recaptcha/intro) in [Go](http://golang.org/).
+This package is designed to handle [Google reCAPTCHA v3](https://developers.google.com/recaptcha/intro) in [Go](http://golang.org/).
 
 Usage
 -----
