@@ -4,7 +4,7 @@ go-recaptcha-v3
 About
 -----
 
-This package is designed to handle GOOGLE [reCAPTCHA v3](https://developers.google.com/recaptcha/intro) in [Go](http://golang.org/).
+This package is designed to handle [GOOGLE reCAPTCHA v3](https://developers.google.com/recaptcha/intro) in [Go](http://golang.org/).
 
 Usage
 -----
@@ -22,12 +22,11 @@ import (
 )
 ```
 
-Somewhere in your code: 
+Now somewhere in your code: 
 ```go
 recaptcha := Recaptcha{ PrivateKey: "your-recaptcha-private-key" }
 result, err := recaptcha.Verify(action string, response string, minScore uint)
 ```
-
 
 Origin
 ------
