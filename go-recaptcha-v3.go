@@ -1,4 +1,4 @@
-package main
+package go_recaptcha_v3
 
 import (
 	"encoding/json"
